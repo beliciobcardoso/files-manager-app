@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  folders      Folder[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique // Chave hierárquica única (exemplo: "1", "11", "111")
+  name      String
+  path      String
+  parentKey String? // Chave da pasta pai (null para pastas raiz)
+  userId    String // Relaciona com o id do usuário
+  user      User     @relation(fields: [userId], references: [id])
+  files     File[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Self-relation for subfolders
+  parent     Folder?  @relation("FolderToSubfolder", fields: [parentKey], references: [key], onDelete: Restrict)
+  subfolders Folder[] @relation("FolderToSubfolder")
+}
+
+model File {
+  id           Int      @id @default(autoincrement())
+  key          String   @unique // Identificador único para o arquivo
+  name         String
+  type         String
+  size         Int
+  lastModified DateTime
+  path         String
+  folderKey    String // Relaciona com a key da pasta pai
+  folder       Folder   @relation(fields: [folderKey], references: [key])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
