@@ -41,7 +41,8 @@ async function generateKey(baseKey: string): Promise<string> {
     if (!allFolders.length) {
       return '1';
     } else {
-      const lastFolder = allFolders[allFolders.length - 1];
+      const rootFolders = allFolders.filter(folder => folder.parentKey === '0');
+      const lastFolder = rootFolders[rootFolders.length - 1];
       const lastKey = parseInt(lastFolder.key);
       return (lastKey + 1).toString();
     }
