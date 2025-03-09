@@ -174,7 +174,8 @@ export async function GET(request: NextRequest) {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const searchParams = request.nextUrl.searchParams;
-    const folderId = searchParams.get('folderId');
+    const folderId = searchParams.get('folderKey');
+    console.log('folderId:', folderId);
 
     if (!folderId) {
       return NextResponse.json(

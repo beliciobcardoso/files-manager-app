@@ -33,13 +33,13 @@ export default function FolderView({ folder, onFileSelect }: FolderViewProps) {
     
     setLoading(true);
     try {
-      const response = await fetch(`/api/files?folderId=${folder.key}`);
-      if (!response.ok) throw new Error('Falha ao carregar arquivos');
+      const response = await fetch(`/api/files?folderKey=${folder.key}`);
+      if (!response.ok) throw new Error('Falha ao carregar arquivos!');
       
       const result = await response.json();
       
       if (!result.success) {
-        throw new Error(result.error || 'Falha ao carregar arquivos');
+        throw new Error(result.error || 'Falha ao carregar arquivos!');
       }
       
       setFiles(result.data || []);
@@ -48,7 +48,7 @@ export default function FolderView({ folder, onFileSelect }: FolderViewProps) {
       toast.current?.show({ 
         severity: 'error', 
         summary: 'Erro', 
-        detail: 'Falha ao carregar arquivos',
+        detail: 'Falha ao carregar arquivos!',
         life: 3000 
       });
     } finally {
