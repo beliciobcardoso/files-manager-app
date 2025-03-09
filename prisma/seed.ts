@@ -48,6 +48,15 @@ async function main() {
         },
       });
 
+      await prisma.file.create({
+        data: {
+          userId: userId,
+          fileData: {},
+          folderKey: root.key,
+          createdAt: new Date(),
+        },
+      })
+
       // Criar pastas principais
       const documentos = await prisma.folder.create({
         data: {
@@ -59,6 +68,15 @@ async function main() {
         },
       });
 
+      await prisma.file.create({
+        data: {
+          userId: userId,
+          fileData: {},
+          folderKey: documentos.key,
+          createdAt: new Date(),
+        }
+      })
+
       const imagens = await prisma.folder.create({
         data: {
           key: '2',
@@ -68,6 +86,14 @@ async function main() {
           userId: userId,
         },
       });
+      await prisma.file.create({
+        data: {
+          userId: userId,
+          fileData: {},
+          folderKey: imagens.key,
+          createdAt: new Date(),
+        }
+      })
 
       const downloads = await prisma.folder.create({
         data: {
@@ -79,6 +105,14 @@ async function main() {
         },
       });
 
+      await prisma.file.create({
+        data: {
+          userId: userId,
+          fileData: {},
+          folderKey: downloads.key,
+          createdAt: new Date(),
+        }
+      })
 
       console.log('Estrutura de pastas criada com sucesso!');
 

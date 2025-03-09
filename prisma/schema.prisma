@@ -18,9 +18,10 @@ model User {
   email        String   @unique
   name         String?
   passwordHash String
-  folders      Folder[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  folders      Folder[]
+  File         File[]
 }
 
 model Folder {
@@ -41,15 +42,24 @@ model Folder {
 }
 
 model File {
-  id           Int      @id @default(autoincrement())
-  key          String   @unique // Identificador único para o arquivo
-  name         String
-  type         String
-  size         Int
-  lastModified DateTime
-  path         String
-  folderKey    String // Relaciona com a key da pasta pai
-  folder       Folder   @relation(fields: [folderKey], references: [key])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  fileData  Json // Campo JSON para armazenar os dados do arquivo
+  folderKey String // Relaciona com a key da pasta pai
+  folder    Folder   @relation(fields: [folderKey], references: [key])
+  userId    String // Relaciona com o id do usuário
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
+//  id           Int      @id @default(autoincrement())
+//   key          String   @unique // Identificador único para o arquivo
+//   name         String
+//   type         String
+//   size         Int
+//   lastModified DateTime
+//   path         String
+//   folderKey    String // Relaciona com a key da pasta pai
+//   folder       Folder   @relation(fields: [folderKey], references: [key])
+//   createdAt    DateTime @default(now())
+//   updatedAt    DateTime @updatedAt

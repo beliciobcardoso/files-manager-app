@@ -99,6 +99,18 @@ export async function POST(req: Request) {
       }
     });
 
+    // Criar automaticamente um registro de arquivo vazio associado à pasta
+    const emptyFile = await prisma.file.create({
+      data: {
+        fileData: {},
+        userId,
+        folderKey: key,
+        createdAt: new Date()
+      }
+    });
+
+    console.log(`Pasta criada com sucesso: ${name}, ID: ${newFolder.id}, com arquivo vazio associado: ${emptyFile.id}`);
+
     // Retorna o objeto completo da pasta para que possamos usá-lo no front-end
     return NextResponse.json(newFolder);
   } catch (error) {
