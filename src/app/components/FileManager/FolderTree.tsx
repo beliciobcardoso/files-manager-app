@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import { Tree } from 'primereact/tree';
 import { TreeNode } from 'primereact/treenode';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -19,7 +19,13 @@ interface FolderTreeProps {
   onFolderSelect: (folder: FolderType) => void;
 }
 
-export default function FolderTree({ onFolderSelect }: FolderTreeProps) {
+// Interface para o ref exposto pelo componente
+export interface FolderTreeRef {
+  reloadFolders: () => Promise<void>;
+  selectFolder: (folderId: string) => void;
+}
+
+const FolderTree = forwardRef<FolderTreeRef, FolderTreeProps>(({ onFolderSelect }, ref) => {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<{ [key: string]: boolean }>({'1': true});
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,23 +59,82 @@ export default function FolderTree({ onFolderSelect }: FolderTreeProps) {
     }
   };
 
-  useEffect(() => {
-    const fetchFolders = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/folders');
-        if (!response.ok) throw new Error('Falha ao carregar pastas');
+  // Função para carregar as pastas do servidor
+  const fetchFolders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/folders');
+      if (!response.ok) throw new Error('Falha ao carregar pastas');
 
-        const data = await response.json();
-        const treeNodes = buildTreeNodes(data);
+      const data = await response.json();
+      const treeNodes = buildTreeNodes(data);
 
-        setNodes(treeNodes);
-      } catch (error) {
-        console.error('Erro ao carregar estrutura de pastas:', error);
-      } finally {
-        setLoading(false);
+      setNodes(treeNodes);
+      return data; // Retorna os dados para uso externo, se necessário
+    } catch (error) {
+      console.error('Erro ao carregar estrutura de pastas:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Expõe métodos para o componente pai através do ref
+  useImperativeHandle(ref, () => ({
+    reloadFolders: async () => {
+      return await fetchFolders();
+    },
+    selectFolder: (folderId: string) => {
+      setSelectedKey(folderId);
+      
+      // Encontra o nó da pasta para selecioná-lo
+      const folderNode = findNodeByKey(nodes, folderId);
+      if (folderNode && folderNode.data) {
+        onFolderSelect(folderNode.data);
+        
+        // Expandir os pais para mostrar o nó selecionado
+        expandParentsOfNode(folderId);
       }
-    };
+    }
+  }));
+
+  // Expandir todos os pais de um nó para garantir que ele seja visível
+  const expandParentsOfNode = (nodeKey: string) => {
+    const pathToNode = findPathToNode(nodes, nodeKey);
+    if (pathToNode.length > 0) {
+      const newExpandedKeys = {...expandedKeys};
+      
+      // Adicionar todas as chaves de pais às chaves expandidas
+      pathToNode.forEach(parentKey => {
+        if (parentKey !== nodeKey) { // Não precisamos expandir o próprio nó
+          newExpandedKeys[parentKey] = true;
+        }
+      });
+      
+      setExpandedKeys(newExpandedKeys);
+      updateNodeIcons(newExpandedKeys);
+    }
+  };
+
+  // Encontra o caminho (keys de todos os pais) até um nó
+  const findPathToNode = (nodeList: TreeNode[], targetKey: string, path: string[] = []): string[] => {
+    for (const node of nodeList) {
+      if (node.key === targetKey) {
+        return [...path, node.key as string];
+      }
+      
+      if (node.children && node.children.length > 0) {
+        const result = findPathToNode(node.children, targetKey, [...path, node.key as string]);
+        if (result.length > 0) {
+          return result;
+        }
+      }
+    }
+    
+    return [];
+  };
+
+  useEffect(() => {
     fetchFolders();
   }, []);
 
@@ -84,7 +149,7 @@ export default function FolderTree({ onFolderSelect }: FolderTreeProps) {
         label: folder.name,
         data: folder,
         icon: hasChildren 
-        ? (!isExpanded ? 'pi pi-folder-open text-yellow-500' : 'pi pi-folder text-yellow-300')
+        ? (!isExpanded ? 'pi pi-folder text-yellow-300' : 'pi pi-folder-open text-yellow-500')
         : 'pi pi-folder text-yellow-100',
         children: folder.subfolders?.map((subfolder) => buildNode(subfolder)) || []
       };
@@ -126,10 +191,8 @@ export default function FolderTree({ onFolderSelect }: FolderTreeProps) {
     // Para modo de seleção única, o valor é uma string direta
     const newKey = e.value;
     setSelectedKey(newKey);
-
     if (newKey) {
       const selectedTreeNode = findNodeByKey(nodes, newKey);
-
       if (selectedTreeNode && selectedTreeNode.data) {
         onFolderSelect(selectedTreeNode.data);
       }
@@ -199,4 +262,8 @@ export default function FolderTree({ onFolderSelect }: FolderTreeProps) {
       )}
     </div>
   );
-}
+});
+
+FolderTree.displayName = 'FolderTree';
+
+export default FolderTree;

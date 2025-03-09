@@ -25,12 +25,43 @@ function buildFolderHierarchy(folders: any[], parentKey: string | null = null): 
   return result;
 }
 
+async function generateKey(baseKey: string): Promise<string> {
+
+  let num = 1;
+  let newKey = baseKey + num;
+
+  // Obter todas as pastas
+  const allFolders = await prisma.folder.findMany({
+    orderBy: {
+      key: 'asc'
+    }
+  });
+
+  if (baseKey === '0') {
+    if (!allFolders.length) {
+      return '1';
+    } else {
+      const lastFolder = allFolders[allFolders.length - 1];
+      const lastKey = parseInt(lastFolder.key);
+      return (lastKey + 1).toString();
+    }
+  } else {
+
+    while (allFolders.some(folder => folder.key === newKey)) {
+      num++;
+      newKey = baseKey + num;
+    }
+
+    return newKey;
+  }
+}
+
 export async function GET() {
   try {
     // Obter todas as pastas
     const allFolders = await prisma.folder.findMany({
       orderBy: {
-      key: 'asc'
+        key: 'asc'
       }
     });
 
@@ -49,75 +80,26 @@ export async function GET() {
 
 // Opção para criar uma nova pasta
 export async function POST(req: Request) {
+  const { name, userId, selectedFolder } = await req.json();
+
+  const path = selectedFolder.path === '/' ? `${selectedFolder.path}${name} ` : `${selectedFolder.path}/${name}`
+  const parentKey = selectedFolder.key;
+  const key = await generateKey(parentKey);
+
   try {
-    const data = await req.json();
-    const { name, parentKey, userId, path } = data;
-
-    // Validação dos dados
-    if (!name || !userId) {
-      return NextResponse.json(
-        { error: 'Nome da pasta e ID do usuário são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    // Gerar uma key única baseada no parentKey
-    let newKey = '';
-    if (parentKey !== '0') { // Verifica se não é a pasta raiz
-      // Buscar todas as subpastas do pai para determinar a próxima key
-      const siblingFolders = await prisma.folder.findMany({
-        where: {
-          parentKey: parentKey
-        },
-        orderBy: {
-          key: 'desc'
-        },
-        take: 1
-      });
-
-      if (siblingFolders.length > 0) {
-        // Incrementar o último digito da key
-        const lastKey = siblingFolders[0].key;
-        const baseKey = parentKey;
-        const lastDigit = parseInt(lastKey.substring(baseKey.length)) || 0;
-        newKey = `${baseKey}${lastDigit + 1}`;
-      } else {
-        // Primeira subpasta deste pai
-        newKey = `${parentKey}1`;
-      }
-    } else {
-      // Pasta raiz - encontrar a próxima key de nível superior
-      const rootFolders = await prisma.folder.findMany({
-        where: {
-          parentKey: '0'
-        },
-        orderBy: {
-          key: 'desc'
-        },
-        take: 1
-      });
-
-      if (rootFolders.length > 0) {
-        const lastRootKey = rootFolders[0].key;
-        const lastDigit = parseInt(lastRootKey) || 0;
-        newKey = `${lastDigit + 1}`;
-      } else {
-        newKey = '1'; // Primeira pasta no sistema
-      }
-    }
-
-    // Criar a nova pasta no banco de dados
+    // Lógica para criar a nova pasta
     const newFolder = await prisma.folder.create({
       data: {
-        key: newKey,
+        key,
         name,
-        path: path || `/${name}`,
         parentKey,
-        userId
+        userId,
+        path
       }
     });
 
-    return NextResponse.json(newFolder, { status: 201 });
+    // Retorna o objeto completo da pasta para que possamos usá-lo no front-end
+    return NextResponse.json(newFolder);
   } catch (error) {
     console.error('Erro ao criar pasta:', error);
     return NextResponse.json(

@@ -3,6 +3,8 @@ import type { FileType } from '@/app/lib/types';
 
 // Mock data - in a real app, this would come from a database or file system
 const mockFiles: Record<string, FileType[]> = {
+  '0': [ // Root
+  ],
   '1': [ // Documentos
     {
       id: '101',
@@ -153,10 +155,10 @@ const mockFiles: Record<string, FileType[]> = {
   ],
   '1113': [ // Implantação
   ],
-   '11111': [ // Frontend
-  ],   
-   '11112': [ // Backend
-  ],   
+  '11111': [ // Frontend
+  ],
+  '11112': [ // Backend
+  ],
 };
 
 // Sample file contents for text files
@@ -170,35 +172,35 @@ export async function GET(request: NextRequest) {
   try {
     // Simulate delay to mimic real-world API
     await new Promise(resolve => setTimeout(resolve, 300));
-    
+
     const searchParams = request.nextUrl.searchParams;
     const folderId = searchParams.get('folderId');
-    
+
     if (!folderId) {
       return NextResponse.json(
-        { error: 'Folder ID is required', success: false }, 
+        { error: 'Folder ID is required', success: false },
         { status: 400 }
       );
     }
-    
+
     // Verificar se a pasta existe
     if (!mockFiles[folderId] && folderId !== 'root') {
       return NextResponse.json(
-        { error: 'Folder not found', success: false }, 
+        { error: 'Folder not found', success: false },
         { status: 404 }
       );
     }
-    
+
     const files = mockFiles[folderId] || [];
-    return NextResponse.json({ 
-      data: files, 
+    return NextResponse.json({
+      data: files,
       success: true,
       totalFiles: files.length
     });
   } catch (error) {
     console.error('Error in files API:', error);
     return NextResponse.json(
-      { error: 'Internal server error', success: false }, 
+      { error: 'Internal server error', success: false },
       { status: 500 }
     );
   }
@@ -207,9 +209,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Em uma implementação real, isso lidaria com o upload de arquivos,
   // armazenaria eles e atualizaria o banco de dados.
-  
+
   // Aqui estamos apenas simulando um upload bem-sucedido
   await new Promise(resolve => setTimeout(resolve, 1000));
-  
+
   return NextResponse.json({ success: true, message: 'Files uploaded successfully' });
 }
