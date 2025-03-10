@@ -74,7 +74,7 @@ export default function Home() {
 
     if (response.ok) {
       console.log('Nova pasta criada com sucesso');
-      
+
       // Obter dados da pasta recém-criada
       const newFolder = await response.json();
 
@@ -87,7 +87,7 @@ export default function Home() {
       if (folderTreeRef.current) {
         // Recarregar a árvore de pastas
         await folderTreeRef.current.reloadFolders();
-        
+
         // Selecionar a nova pasta após um pequeno delay para garantir que a árvore foi atualizada
         setTimeout(() => {
           if (newFolder && newFolder.id) {
@@ -129,9 +129,9 @@ export default function Home() {
                   Pastas
                 </h2>
               </div>
-              <FolderTree 
+              <FolderTree
                 ref={folderTreeRef}
-                onFolderSelect={handleFolderSelect} 
+                onFolderSelect={handleFolderSelect}
               />
             </div>
           </SplitterPanel>
@@ -181,7 +181,7 @@ export default function Home() {
         footer={
           <div className="flex justify-end gap-4">
             <Button label="Cancelar" onClick={() => setIsDialogVisible(false)} severity='danger' outlined className="p-2" />
-            <Button label="Criar" onClick={createNewFolder} className="p-button-primary p-2" text raised autoFocus/>
+            <Button label="Criar" onClick={createNewFolder} className="p-button-primary p-2" text raised autoFocus />
           </div>
         }
       >
