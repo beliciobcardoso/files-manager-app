@@ -51,7 +51,7 @@ async function main() {
       await prisma.file.create({
         data: {
           userId: userId,
-          fileData: {},
+          fileData: `{${root.key}: []}`,
           folderKey: root.key,
           createdAt: new Date(),
         },
@@ -71,7 +71,7 @@ async function main() {
       await prisma.file.create({
         data: {
           userId: userId,
-          fileData: {},
+          fileData: `{${documentos.key}: []}`,
           folderKey: documentos.key,
           createdAt: new Date(),
         }
@@ -89,7 +89,7 @@ async function main() {
       await prisma.file.create({
         data: {
           userId: userId,
-          fileData: {},
+          fileData: `{${imagens.key}: []}`,
           folderKey: imagens.key,
           createdAt: new Date(),
         }
@@ -108,7 +108,7 @@ async function main() {
       await prisma.file.create({
         data: {
           userId: userId,
-          fileData: {},
+          fileData: `{${downloads.key}: []}`,
           folderKey: downloads.key,
           createdAt: new Date(),
         }
